@@ -39,7 +39,7 @@
 	)
 
 (defn parse-binary [binary-stream binary-protocol]
-	(map (partial (parse-section binary-stream) (:sections binary-protocol))))
+	(map (partial parse-section binary-stream) (:sections binary-protocol)))
 
 (defn visualize-section [section]
 	)
