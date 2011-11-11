@@ -14,10 +14,9 @@
     (take n (map byte (cycle (range -127 128)))))
 
 (deftest foo
-        (spit THE_FILE (String. (byte-array (get-bytes 1000))))
-        (def q (slurp THE_FILE))
-        (is true (= (alength (.getBytes q)) 1000))
-        )
+    (spit THE_FILE (String. (byte-array (get-bytes 1000))))
+    (let [q (slurp THE_FILE)]
+        (is true (= (alength (.getBytes q)) 1000))))
 
 
 
