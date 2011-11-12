@@ -22,11 +22,19 @@
 (defprotocol StopWhen
     (match-found? [this current context parsed-sections]))
 
+; (defn tramp [f]
+;     (let [result (f)]
+;         (println "result:" result)
+;         (if (= -1 result)
+;             nil
+;             #(tramp f))))
+
 (deftype ByteBasedChunker
     []
     Chunker
     (chunk-it [this chunkable]
-    	(repeatedly (.read chunkable))))
+        (repeatedly #(.read chunkable))))
+    	; (trampoline tramp #(.read chunkable))))
 
 (deftype FileStreamWrapper
 	[source]
@@ -38,16 +46,31 @@
     [stop-fun]
     SectionInfo
     (get-section [this stream-seq parsed-so-far]
-        (loop [match? (match-found? stop-fun (first stream-seq) [] parsed-so-far) the-rest (rest stream-seq) acc (:new-context match?)]
+		(do
+			(prn "in variable length")
+			(prn "stream seq" (class stream-seq))
+			(prn "match? " (match-found? stop-fun (first stream-seq) [] parsed-so-far))
+			(prn "the rest" (class stream-seq))
+			(prn "new ctx" (:new-context (match-found? stop-fun (first stream-seq) [] parsed-so-far)))
+        (loop [match? (match-found? stop-fun (first stream-seq) [] parsed-so-far) the-rest stream-seq acc (:new-context match?)]
+						 (prn "match?" match?)
+						 (prn "the-rest" (class the-rest))
+						 (prn "acc" acc)
+            (when (:eof match?)
+                (throw (RuntimeException. "couldn't find end of variable length section")))
             (if (:match match?)
                 acc
-                (recur (match-found? stop-fun (first the-rest) acc parsed-so-far) the-rest [])))))
+                (recur (match-found? stop-fun (first the-rest) acc parsed-so-far) the-rest acc)))))
+		)
 
 (deftype FixedLength 
     [the-length]
     SectionInfo
     (get-section [this stream-seq parsed-so-far]
-        (take the-length stream-seq)))
+		(let [result (take the-length stream-seq)]
+			(println "fixed result" result)
+			result)))
+        ;(take the-length stream-seq))))
 
 (deftype EnumeratedValue
     [the-length an-enumeration]
@@ -75,7 +98,7 @@
 	{:ID kw-id :SECTION_INFO section-info})
 
 (defn parse-section [chunkable chunker parsed-so-far section]
-	{(:ID section) :ID, :RESULT (get-section section (chunk-it chunker chunkable) parsed-so-far)})
+	{(:ID section) :ID, :RESULT (get-section (:SECTION_INFO section) (chunk-it chunker chunkable) parsed-so-far)})
 
 (defn binary-protocol [chunker & sections]
 	{:BASIS chunker :SECTIONS sections})
@@ -86,7 +109,9 @@
 		(let [basis (:BASIS binary-protocol) to-chunk (get-chunkable-stream chunkable basis) sections (:SECTIONS binary-protocol)]
 			(loop [rest-sections sections acc []]
 				(if (seq rest-sections)
-					(recur (rest sections) (conj acc (parse-section to-chunk basis acc (first sections))))
+					(do
+					(println "doing: " (first rest-sections))
+					(recur (rest rest-sections) (conj acc (parse-section to-chunk basis acc (first rest-sections)))))
 					acc))))
 
 (defn visualize-section [section]
