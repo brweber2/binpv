@@ -22,25 +22,11 @@
 (defprotocol StopWhen
     (match-found? [this current context parsed-sections]))
 
-; (defn tramp [f]
-;     (let [result (f)]
-;         (println "result:" result)
-;         (if (= -1 result)
-;             nil
-;             [result #(tramp f)])))
-
 (deftype ByteBasedChunker
     []
     Chunker
     (chunk-it [this chunkable]
-        ;(for [chunk (.read chunkable) :while (not= -1 chunk)]
-        ; (for [chunk (trampoline tramp #(.read chunkable)) ] ; :while (not= -1 chunk)]
-        ;     chunk)))
-        ; (for [chunk (repeatedly #(.read chunkable)) :while (not= -1 chunk)]
-        ;     chunk)))
-        ;[1 2 3 4 5 6 7 8 70 71 9 10 -1]))
         (repeatedly #(.read chunkable))))
-    	; (trampoline tramp #(.read chunkable))))
 
 (deftype FileStreamWrapper
 	[source]
@@ -52,7 +38,7 @@
     [stop-fun]
     SectionInfo
     (get-section [this stream-seq parsed-so-far]
-		(do
+		; (do
 			(prn "in variable length")
 			(prn "stream seq" (class stream-seq))
 			(prn "match? " (match-found? stop-fun (first stream-seq) [] parsed-so-far))
@@ -74,7 +60,7 @@
                     (rest the-rest) 
                     new-match
                     (:new-context new-match)))))))
-		)
+		; )
 
 (deftype FixedLength 
     [the-length]
@@ -87,7 +73,6 @@
 			(println "fixed result" result)
 			result)))
         )
-        ;(take the-length stream-seq))))
 
 (deftype EnumeratedValue
     [the-length an-enumeration]
@@ -108,7 +93,6 @@
     SectionInfo
     (get-section [this stream-seq parsed-so-far]
         (take (get-length dependent-length parsed-so-far) stream-seq)))
-
 
 (defn section
 	[kw-id section-info]
