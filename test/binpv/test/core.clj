@@ -16,8 +16,8 @@
     (let [test-file (get-file) number-bytes 1000 the-bytes (get-bytes number-bytes)]
         (write-bytes-to-file test-file the-bytes)
         (let [q (slurp test-file)]
-            (is true (= (alength (.getBytes q)) number-bytes))
-            (is true (= (.getBytes q) (byte-array the-bytes))))))
+            (is (= (alength (.getBytes q)) number-bytes))
+            (is (= (seq (.getBytes q)) (seq (byte-array the-bytes)))))))
 
 ; create valid binary file for our protocol
 ; define our binary protocol
@@ -34,9 +34,10 @@
 			(println "looking at" (first match-seq))
             ; (println "as char" (first (Character/toChars (first match-seq))))
         (let [first-match (first match-seq)]
+            (prn "first-match" first-match)
             (if (nil? first-match)
                 :eof
-                (case (first (Character/toChars (first match-seq)))
+                (case (first (Character/toChars first-match))
                     \v :private
                     \b :public
         			:unknown)))))
@@ -61,7 +62,8 @@
         (let [so-far (conj context current) looking-for (count seq-to-match) right-now (take-last looking-for so-far) done (or (= -1 current) (nil? current))]
             (prn "current is" current)
             (prn "comparing" seq-to-match right-now)
-            (if (= seq-to-match right-now)
+            (prn "comparing" (map int seq-to-match) right-now)
+            (if (= (map int seq-to-match) right-now)
                 {:match true, :new-context right-now :eof done}
                 {:match false, :new-context so-far :eof done}))))
 
@@ -85,7 +87,7 @@
         (write-bytes-to-file test-file (get-bytes number-bytes))
         (def parsed (parse-binary (FileStreamWrapper. test-file) key-token-format))
 		(println "parsed is" parsed)
-        (is false (nil? parsed))))
+        (is (seq parsed))))
 
 ; repeat, but for invalid binary file
 

@@ -27,13 +27,19 @@
 ;         (println "result:" result)
 ;         (if (= -1 result)
 ;             nil
-;             #(tramp f))))
+;             [result #(tramp f)])))
 
 (deftype ByteBasedChunker
     []
     Chunker
     (chunk-it [this chunkable]
-        (repeatedly #(.read chunkable))))
+        ;(for [chunk (.read chunkable) :while (not= -1 chunk)]
+        ; (for [chunk (trampoline tramp #(.read chunkable)) ] ; :while (not= -1 chunk)]
+        ;     chunk)))
+        ; (for [chunk (repeatedly #(.read chunkable)) :while (not= -1 chunk)]
+        ;     chunk)))
+        [1 2 3 4 5 6 7 8 70 71 9 10 -1]))
+        ; (repeatedly #(.read chunkable))))
     	; (trampoline tramp #(.read chunkable))))
 
 (deftype FileStreamWrapper
@@ -52,7 +58,10 @@
 			(prn "match? " (match-found? stop-fun (first stream-seq) [] parsed-so-far))
 			(prn "the rest" (class stream-seq))
 			(prn "new ctx" (:new-context (match-found? stop-fun (first stream-seq) [] parsed-so-far)))
-        (loop [match? (match-found? stop-fun (first stream-seq) [] parsed-so-far) the-rest stream-seq acc (:new-context match?)]
+        (loop [ the-rest (rest stream-seq)
+                match? (match-found? stop-fun (first stream-seq) [] parsed-so-far) 
+                acc (:new-context match?)
+                ]
 						 (prn "match?" match?)
 						 (prn "the-rest" (class the-rest))
 						 (prn "acc" acc)
@@ -60,16 +69,24 @@
                 (throw (RuntimeException. "couldn't find end of variable length section")))
             (if (:match match?)
                 acc
-                (recur (match-found? stop-fun (first the-rest) acc parsed-so-far) the-rest acc)))))
+                (let [new-match (match-found? stop-fun (first the-rest) acc parsed-so-far) ]
+                (recur 
+                    (rest the-rest) 
+                    new-match
+                    (:new-context new-match)))))))
 		)
 
 (deftype FixedLength 
     [the-length]
     SectionInfo
     (get-section [this stream-seq parsed-so-far]
+        (do 
+            (prn "wtf stream seq" (class stream-seq))
+            (prn "the-length" the-length)
 		(let [result (take the-length stream-seq)]
 			(println "fixed result" result)
 			result)))
+        )
         ;(take the-length stream-seq))))
 
 (deftype EnumeratedValue
