@@ -38,8 +38,8 @@
         ;     chunk)))
         ; (for [chunk (repeatedly #(.read chunkable)) :while (not= -1 chunk)]
         ;     chunk)))
-        [1 2 3 4 5 6 7 8 70 71 9 10 -1]))
-        ; (repeatedly #(.read chunkable))))
+        ;[1 2 3 4 5 6 7 8 70 71 9 10 -1]))
+        (repeatedly #(.read chunkable))))
     	; (trampoline tramp #(.read chunkable))))
 
 (deftype FileStreamWrapper
