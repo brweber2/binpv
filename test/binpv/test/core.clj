@@ -1,5 +1,6 @@
 (ns binpv.test.core
   (:use [binpv.core])
+  (:import [binpv.core ByteBasedChunker FixedLength EnumeratedValue DependentValue FixedLength DependentFixedLength VariableLength FileStreamWrapper])
   (:use [clojure.test]))
 
 (defn get-file [] (str "/tmp/foo" (.toString (java.util.UUID/randomUUID)) ".txt"))
@@ -27,7 +28,7 @@
     []
     AnEnumeration
     (get-value [this match-seq]
-        (case (first (Character/toChars (first the-bytes)))
+        (case (first (Character/toChars (first match-seq)))
             \v :private
             \b :public
             :else (throw (RuntimeException.)))))
@@ -42,12 +43,12 @@
     []
     DependentLength
     (get-length [this parsed-sections]
-        (Integer/parseInt (first (filter :PUBLIC_KEY_LENGTH sections)))))
+        (Integer/parseInt (first (filter :PUBLIC_KEY_LENGTH parsed-sections)))))
 
 (deftype StopAt
     [seq-to-match]
     StopWhen
-    (match-found? [this current context]
+    (match-found? [this current context sections]
         (let [so-far (conj current context) looking-for (count seq-to-match) right-now (take-last looking-for so-far)]
             (if (= seq-to-match right-now)
                 {:match true, :new-context right-now}
@@ -57,7 +58,7 @@
     []
     AnEnumeration
     (get-value [this match-seq]
-        (= (str some-bytes) "AD"))    
+        (= (str match-seq) "AD")))    
 
 (def key-token-format (binary-protocol (ByteBasedChunker.)
     (section :KEY_TOKEN_ID,         (FixedLength. 2))
