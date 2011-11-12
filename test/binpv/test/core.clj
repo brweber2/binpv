@@ -4,12 +4,6 @@
 
 (defn get-file [] (str "/tmp/foo" (.toString (java.util.UUID/randomUUID)) ".txt"))
 
-
-; create valid binary file for our protocol
-; define our binary protocol
-; parse binary file
-; visualize binary file
-
 (defn get-bytes [n]
     (take n (map byte (cycle (range -127 128)))))
 
@@ -24,38 +18,61 @@
             (is true (= (alength (.getBytes q)) number-bytes))
             (is true (= (.getBytes q) (byte-array the-bytes))))))
 
-; protocol specific helper funs
-(defn includes-private-key? [the-bytes]
-    ; todo add precondition that the size of the-bytes is one?
-    (case (first (Character/toChars (first the-bytes)))
-        \v :private
-        \b :public))
+; create valid binary file for our protocol
+; define our binary protocol
+; parse binary file
+; visualize binary file
 
-(defn private-key-present? [sections]
-    (= (get-section sections :INCLUDES_PRIVATE_KEY) :private))
+(deftype IncludesPrivateKey
+    []
+    AnEnumeration
+    (get-value [this match-seq]
+        (case (first (Character/toChars (first the-bytes)))
+            \v :private
+            \b :public
+            :else (throw (RuntimeException.)))))
 
-(defn public-key-length [sections]
-    (Integer/parseInt (get-section sections :PUBLIC_KEY_LENGTH)))
+(deftype PrivateKeyPresent
+    []
+    DependentFun
+    (criteria-met? [this sections]
+        (= (first (filter :INCLUDES_PRIVATE_KEY sections)) [1])))
 
-(defn stop-at-fun [next-byte context]
-    [(= \; next-byte) context])
-    
-(defn all-done [some-bytes]
-    (= (str some-bytes) "AD"))
+(deftype PublicKeyLength
+    []
+    DependentLength
+    (get-length [this parsed-sections]
+        (Integer/parseInt (first (filter :PUBLIC_KEY_LENGTH sections)))))
 
-(defbinp key-token-format :BASIS :BYTE
-    (section :ID :KEY_TOKEN_ID,         :FIXED_LENGTH 2, :DESCRIPTION "Key Token Identifier")
-    (section :ID :INCLUDES_PRIVATE_KEY, :FIXED_LENGTH 1, :ENUM_FUN includes-private-key?) 
-    (section :ID :PRIVATE_KEY,          :FIXED_LENGTH 256, :DEPENDENT_FUN private-key-present?) 
-    (section :ID :PUBLIC_KEY_LENGTH,    :FIXED_LENGTH 2)
-    (section :ID :PUBLIC_KEY,           :DEPENDENT_FIXED_LENGTH public-key-length)
-    (section :ID :THROW_AWAY,           :VARIABLE_LENGTH stop-at-fun)
-    (section :ID :THE_END,              :FIXED_LENGTH 2, :ENUM_FUN all-done))
+(deftype StopAt
+    [seq-to-match]
+    StopWhen
+    (match-found? [this current context]
+        (let [so-far (conj current context) looking-for (count seq-to-match) right-now (take-last looking-for so-far)]
+            (if (= seq-to-match right-now)
+                {:match true, :new-context right-now}
+                {:match false, :new-context so-far}))))
+
+(deftype AllDone
+    []
+    AnEnumeration
+    (get-value [this match-seq]
+        (= (str some-bytes) "AD"))    
+
+(def key-token-format (binary-protocol (ByteBasedChunker.)
+    (section :KEY_TOKEN_ID,         (FixedLength. 2))
+    (section :INCLUDES_PRIVATE_KEY, (EnumeratedValue. 1 (IncludesPrivateKey.)))
+    (section :PRIVATE_KEY,          (DependentValue. 256 (PrivateKeyPresent.)))
+    (section :PUBLIC_KEY_LENGTH,    (FixedLength. 2))
+    (section :PUBLIC_KEY,           (DependentFixedLength. (PublicKeyLength.)))
+    (section :THROW_AWAY,           (VariableLength. (StopAt. [\space\n])))
+    (section :THE_END,              (EnumeratedValue. 2 (AllDone.)))))
 
 (deftest parse-binary-file 
     (let [test-file (get-file) number-bytes 2000]
         (write-bytes-to-file test-file (get-bytes number-bytes))
-        (def parsed (parse-binary test-file key-token-format))
+        (def parsed (parse-binary (FileStreamWrapper. test-file) key-token-format))
+        (prn parsed)
         (is false (nil? parsed))))
 
 ; repeat, but for invalid binary file

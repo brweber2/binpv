@@ -1,45 +1,94 @@
-(ns binpv.core)
+(ns binpv.core
+	(:import [java.io FileInputStream BufferedInputStream]))
 
-(defn get-sections [sections id]
-    (filter id sections))
+(defprotocol Chunker
+    []
+    (chunk-it [this chunkable]))
 
-(defn get-section [sections id]
-    (take 1 (get-sections sections id)))
+(defprotocol StreamWrapper
+	[]
+	(get-chunkable-stream [this chunker-type]))
 
-(def section-keys #{:ID :FIXED_LENGTH :DEPENDENT_FIXED_LENGTH :VARIABLE_LENGTH :DEPENDENT_FUN :ENUM_FUN :DESCRIPTION})
+(defprotocol SectionInfo
+    (get-section [this stream-seq]))
+
+(defprotocol AnEnumeration
+    (get-value [this match-seq]))
+
+(defprotocol DependentFun
+    [parsed-sections]
+    (criteria-met? [this]))
+
+(defprotocol DependentLength
+    []
+    (get-length [this parsed-sections]))
+
+(defprotocol StopWhen
+    []
+    (match-found? [this current context]))
+
+(deftype ByteBasedChunker
+    []
+    Chunker
+    (chunk-it [this chunkable]
+    	(repeatedly (.read chunkable))))
+
+(deftype FileStreamWrapper
+	[source]
+	StreamWrapper
+	(get-chunkable-stream [this chunker-type]
+		(BufferedInputStream. (FileInputStream. source))))
+
+(deftype VariableLength
+    [stop-fun]
+    SectionInfo
+    (get-section [this stream-seq]
+        (loop [match? (match-found? (first stream-seq) []) the-rest (rest stream-seq) acc (:new-context match?)]
+            (if (:match match?)
+                acc
+                (recur (match-found? (first the-rest) acc) the-rest)))))
+
+(deftype FixedLength 
+    [the-length]
+    SectionInfo
+    (get-section [this stream-seq]
+        (take the-length stream-seq)))
+
+(deftype EnumeratedValue
+    [the-length an-enumeration]
+    SectionInfo
+    (get-section [this stream-seq]
+        (let [the-seq (take the-length stream-seq)]
+            (get-value an-enumeration the-seq))))
+
+(deftype DependentValue
+    [the-length dependent-fun]
+    SectionInfo
+    (get-section [this stream-seq]
+        (when (criteria-met? dependent-fun)
+            (take the-length stream-seq))))
+
+(deftype DependentFixedLength
+    [dependent-length]
+    SectionInfo
+    (get-length [this stream-seq]
+        (take (get-length dependent-length) stream-seq)))
 
 
-(defn section 
-	"Valid section keys:
-	:ID
-		Can be a string, symbol or keyword.
-	
-	; only one of the following:
-	:FIXED_LENGTH
-	:DEPENDENT_FIXED_LENGTH
-		Takes a function that returns the length of the section.  
-		The function is passed a sequence the sections parsed so far.
-	:VARIABLE_LENGTH
-		Takes a function that returns true when it is time to stop reading the section.
-		The function takes one chunk and a context.  It must return a seq of a boolean and a context map.
-		The context map allows state to be passed from chunk to chunk since they are read one at a time.
+(defn section
+	[kw-id section-info]
+	{:ID kw-id :SECTION_INFO section-info})
 
-	:DEPENDENT_FUN 
-		Function called that will determine if this section is skipped or present.
-		The function takes a sequence of sections that have been parsed so far.
-	:ENUM_FUN
-		Function that takes a sequence of the chunks read.
+(defn parse-section [chunkable chunker section]
+	{(:ID section) :ID, :RESULT (get-section (chunk-it chunker chunkable))})
 
-	:DESCRIPTION"
-	[& section-info]
-	; todo add post condition that validates keys and values?
-	(apply hash-map section-info))
+(defn binary-protocol [chunker & sections]
+	{:BASIS chunker :SECTIONS sections})
 
-(defn parse-section [stream section]
-	)
-
-(defn parse-binary [binary-stream binary-protocol]
-	(map (partial parse-section binary-stream) (:sections binary-protocol)))
+(defn parse-binary 
+	"todo we need a reader based on the basis..."
+	[chunkable binary-protocol]
+		(doall (map (partial parse-section chunkable (:BASIS binary-protocol)) (:SECTIONS binary-protocol))))
 
 (defn visualize-section [section]
 	)
@@ -47,8 +96,3 @@
 (defn visualize-binary [parsed-binary]
 	)
 
-(defn binp [basis-keyword, basis & sections]
-	^{basis-keyword basis} sections)
-
-(defmacro defbinp [name-to-def, basis-keyword, basis & sections ]
-	`(def ~name-to-def (binp ~basis-keyword ~basis ~@sections)))
