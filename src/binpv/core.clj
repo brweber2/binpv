@@ -1,6 +1,9 @@
 (ns binpv.core
 	(:import [java.io FileInputStream BufferedInputStream]))
 
+(defprotocol Visualizer
+    (visualize-it [this parsed-section]))
+
 (defprotocol Chunker
     (chunk-it [this chunkable]))
 
@@ -22,6 +25,29 @@
 (defprotocol StopWhen
     (match-found? [this current context parsed-sections]))
 
+(defn int-to-hex [i]
+    (Integer/toHexString i))
+
+(defn int-to-ascii [i]
+    (doall (map str (Character/toChars i))))
+
+(defn prhex [s]
+    (doall (map int-to-hex s)))
+
+(defn prascii [s]
+    (doall (map int-to-ascii s)))
+
+(deftype HexVisualizer
+    []
+    Visualizer
+    (visualize-it [this parsed-section]
+        (print (:ID parsed-section))
+        (print (prhex (:RESULT parsed-section)))
+        (print " : ")
+        (print (prascii (:RESULT parsed-section)))
+        (println)))
+        
+    
 (deftype ByteBasedChunker
     []
     Chunker
@@ -99,7 +125,7 @@
 	{:ID kw-id :SECTION_INFO section-info})
 
 (defn parse-section [chunkable chunker parsed-so-far section]
-	{(:ID section) :ID, :RESULT (get-section (:SECTION_INFO section) (chunk-it chunker chunkable) parsed-so-far)})
+	{(:ID section) :ID, :ID (:ID section), :RESULT (get-section (:SECTION_INFO section) (chunk-it chunker chunkable) parsed-so-far)})
 
 (defn binary-protocol [chunker & sections]
 	{:BASIS chunker :SECTIONS sections})
@@ -115,9 +141,17 @@
 					(recur (rest rest-sections) (conj acc (parse-section to-chunk basis acc (first rest-sections)))))
 					acc))))
 
-(defn visualize-section [section]
-	)
+(defn visualize-section [visualizer parsed-section]
+    (do
+        ; (prn "eph")
+        (when visualizer
+            (do
+                ; (prn "ugg")
+    	   (visualize-it visualizer parsed-section)))))
 
-(defn visualize-binary [parsed-binary]
-	)
+(defn visualize-binary [visualizers parsed-binary]
+    (do
+        (println "****************** START BINARY  ****************** ")
+        (doall (map visualize-section visualizers parsed-binary))
+        (println "****************** END BINARY  ****************** ")))
 

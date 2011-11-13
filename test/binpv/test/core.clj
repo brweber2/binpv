@@ -1,6 +1,6 @@
 (ns binpv.test.core
   (:use [binpv.core])
-  (:import [binpv.core ByteBasedChunker FixedLength EnumeratedValue DependentValue FixedLength DependentFixedLength VariableLength FileStreamWrapper])
+  (:import [binpv.core ByteBasedChunker FixedLength EnumeratedValue DependentValue FixedLength DependentFixedLength VariableLength FileStreamWrapper HexVisualizer])
   (:use [clojure.test]))
 
 (defn get-file [] (str "/tmp/foo" (.toString (java.util.UUID/randomUUID)) ".txt"))
@@ -87,7 +87,8 @@
         (write-bytes-to-file test-file (get-bytes number-bytes))
         (def parsed (parse-binary (FileStreamWrapper. test-file) key-token-format))
 		(println "parsed is" parsed)
-        (is (seq parsed))))
+        (is (seq parsed))
+        (visualize-binary [(HexVisualizer.),nil,nil,nil,nil,nil,nil] parsed)))
 
 ; repeat, but for invalid binary file
 
