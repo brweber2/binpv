@@ -42,19 +42,10 @@
     []
     Visualizer
     (visualize-it [this parsed-section]
-        ; (println (:ID parsed-section))
-        ; (println (class parsed-section))
-        ; (println (seq? parsed-section))
-        ; (println (class (:RESULE parsed-section)))
-        ; (println (seq? (:RESULT parsed-section)))
         (println parsed-section)
         (if (seq? (:RESULT parsed-section))
             (dump-buffer (:RESULT parsed-section)))
-        ; (print (prhex (:RESULT parsed-section)))
-        ; (print " : ")
-        ; (print (prascii (:RESULT parsed-section)))
         (println)))
-        
     
 (deftype ByteBasedChunker
     []
@@ -72,41 +63,23 @@
     [stop-fun]
     SectionInfo
     (get-section [this stream-seq parsed-so-far]
-		; (do
-			(prn "in variable length")
-			(prn "stream seq" (class stream-seq))
-			(prn "match? " (match-found? stop-fun (first stream-seq) [] parsed-so-far))
-			(prn "the rest" (class stream-seq))
-			(prn "new ctx" (:new-context (match-found? stop-fun (first stream-seq) [] parsed-so-far)))
         (loop [ the-rest (rest stream-seq)
                 match? (match-found? stop-fun (first stream-seq) [] parsed-so-far) 
                 acc (:new-context match?)
                 ]
-						 (prn "match?" match?)
-						 (prn "the-rest" (class the-rest))
-						 (prn "acc" acc)
             (when (:eof match?)
                 (throw (RuntimeException. "couldn't find end of variable length section")))
             (if (:match match?)
                 acc
                 (let [new-match (match-found? stop-fun (first the-rest) acc parsed-so-far) ]
                 (recur 
-                    (rest the-rest) 
-                    new-match
-                    (:new-context new-match)))))))
-		; )
+                    (rest the-rest)  new-match (:new-context new-match)))))))
 
 (deftype FixedLength 
     [the-length]
     SectionInfo
     (get-section [this stream-seq parsed-so-far]
-        (do 
-            (prn "wtf stream seq" (class stream-seq))
-            (prn "the-length" the-length)
-		(let [result (take the-length stream-seq)]
-			(println "fixed result" result)
-			result)))
-        )
+		(take the-length stream-seq)))
 
 (deftype EnumeratedValue
     [the-length an-enumeration]
@@ -128,6 +101,15 @@
     (get-section [this stream-seq parsed-so-far]
         (take (get-length dependent-length parsed-so-far) stream-seq)))
 
+(deftype StopAt
+    [seq-to-match]
+    StopWhen
+    (match-found? [this current context sections]
+        (let [so-far (conj context current) looking-for (count seq-to-match) right-now (take-last looking-for so-far) done (or (= -1 current) (nil? current))]
+            (if (= (map int seq-to-match) right-now)
+                {:match true, :new-context right-now :eof done}
+                {:match false, :new-context so-far :eof done}))))
+
 (defn section
 	[kw-id section-info]
 	{:ID kw-id :SECTION_INFO section-info})
@@ -145,17 +127,13 @@
 			(loop [rest-sections sections acc []]
 				(if (seq rest-sections)
 					(do
-					(println "doing: " (first rest-sections))
+					(println "parsing section: " (first rest-sections))
 					(recur (rest rest-sections) (conj acc (parse-section to-chunk basis acc (first rest-sections)))))
 					acc))))
 
 (defn visualize-section [visualizer parsed-section]
-    (do
-        ; (prn "eph")
-        (when visualizer
-            (do
-                ; (prn "ugg")
-    	   (visualize-it visualizer parsed-section)))))
+    (when visualizer
+       (visualize-it visualizer parsed-section)))
 
 (defn visualize-binary [visualizers parsed-binary]
     (do

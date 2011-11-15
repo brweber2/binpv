@@ -1,4 +1,5 @@
 ;;;;
+;;;;   Author:             Dave Sletten
 ;;;;
 ;;;;   Clojure feels like a general-purpose language beamed back
 ;;;;     from the near future.

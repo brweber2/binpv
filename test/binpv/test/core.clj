@@ -3,7 +3,9 @@
   (:import [binpv.core ByteBasedChunker FixedLength EnumeratedValue DependentValue FixedLength DependentFixedLength VariableLength FileStreamWrapper HexVisualizer])
   (:use [clojure.test]))
 
-(defn get-file [] (str "/tmp/foo" (.toString (java.util.UUID/randomUUID)) ".txt"))
+(def TEMP_BASE "/tmp/foo")
+
+(defn get-file [] (str TEMP_BASE (.toString (java.util.UUID/randomUUID)) ".txt"))
 
 (defn get-bytes [n]
     (take n (map byte (cycle (range -127 128)))))
@@ -28,20 +30,13 @@
     []
     AnEnumeration
     (get-value [this match-seq]
-		(do
-			(println "empty?" (nil? match-seq))
-			(println "match-seq is " (class  match-seq))
-			(println "looking at" (first match-seq))
-            ; (println "as char" (first (Character/toChars (first match-seq))))
         (let [first-match (first match-seq)]
-            (prn "first-match" first-match)
             (if (nil? first-match)
                 :eof
                 (case (first (Character/toChars first-match))
                     \v :private
                     \b :public
         			:unknown)))))
-)
 
 (deftype PrivateKeyPresent
     []
@@ -54,18 +49,6 @@
     DependentLength
     (get-length [this parsed-sections]
 		(first (:RESULT (first (filter :PUBLIC_KEY_LENGTH parsed-sections)))))) ; todo this ignores the second byte...
-
-(deftype StopAt
-    [seq-to-match]
-    StopWhen
-    (match-found? [this current context sections]
-        (let [so-far (conj context current) looking-for (count seq-to-match) right-now (take-last looking-for so-far) done (or (= -1 current) (nil? current))]
-            (prn "current is" current)
-            (prn "comparing" seq-to-match right-now)
-            (prn "comparing" (map int seq-to-match) right-now)
-            (if (= (map int seq-to-match) right-now)
-                {:match true, :new-context right-now :eof done}
-                {:match false, :new-context so-far :eof done}))))
 
 (deftype AllDone
     []
@@ -90,5 +73,5 @@
         (is (seq parsed))
         (visualize-binary (take 7 (repeat (HexVisualizer.))) parsed)))
 
-; repeat, but for invalid binary file
+; todo add test for invalid binary file
 

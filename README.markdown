@@ -20,6 +20,20 @@ Made up example that shows the various sections that can make up the binary file
         (section :THROW_AWAY,              (VariableLength. (StopAt. [\F \G])))
         (section :THE_END,                 (EnumeratedValue. 2 (AllDone.)))))
 
+You'll have to extends a few protocols yourself if you intend to use sections that are:
+
+* enumerated values (to provide the possible values)
+* dependent values (to declare when value from an earlier section determines if this section is present in the file)
+* dependent fixed length (the length depends on the value of an earlier section) 
+* variable length (only if you want something more sophisticated that a stop sequence)
+
+Examples in test/binpv/test/core.clj include:
+
+* IncludesPrivateKey
+* PrivateKeyPresent
+* PublicKeyLength
+* AllDone
+
 ### Parse your binary file
 
     (def parsed (parse-binary (FileStreamWrapper. test-file) key-token-format))
