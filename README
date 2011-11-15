@@ -1,13 +1,15 @@
 # binpv
 
-library for specifying the format of a binary file
-very *alpha* at the moment.  use at your own risk.
+Library for specifying the format of a binary file.
+Very *alpha* at the moment.  Use at your own risk.
 
 ## Usage
 
-programming mfr
+Just write some code.
 
-made up example that shows the various sections that can make up the binary file:
+### Specify the format of your binary file
+
+Made up example that shows the various sections that can make up the binary file:
 
 (def key-token-format (binary-protocol (ByteBasedChunker.)
     (section :KEY_TOKEN_ID,            (FixedLength. 2))
@@ -17,6 +19,14 @@ made up example that shows the various sections that can make up the binary file
     (section :PUBLIC_KEY,              (DependentFixedLength. (PublicKeyLength.)))
     (section :THROW_AWAY,              (VariableLength. (StopAt. [\F \G])))
     (section :THE_END,                 (EnumeratedValue. 2 (AllDone.)))))
+
+### Parse your binary file
+
+(def parsed (parse-binary (FileStreamWrapper. test-file) key-token-format))
+
+### Render the parsed binary
+
+(visualize-binary (take 7 (repeat (HexVisualizer.))) parsed)
 
 ## License
 
