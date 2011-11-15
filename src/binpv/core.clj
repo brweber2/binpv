@@ -42,10 +42,14 @@
     []
     Visualizer
     (visualize-it [this parsed-section]
-        (println (:ID parsed-section))
-        (if (seq? parsed-section)
-            (dump-buffer (:RESULT parsed-section))
-            (println parsed-section))
+        ; (println (:ID parsed-section))
+        ; (println (class parsed-section))
+        ; (println (seq? parsed-section))
+        ; (println (class (:RESULE parsed-section)))
+        ; (println (seq? (:RESULT parsed-section)))
+        (println parsed-section)
+        (if (seq? (:RESULT parsed-section))
+            (dump-buffer (:RESULT parsed-section)))
         ; (print (prhex (:RESULT parsed-section)))
         ; (print " : ")
         ; (print (prascii (:RESULT parsed-section)))
