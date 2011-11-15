@@ -11,7 +11,7 @@ Just write some code.
 
 Made up example that shows the various sections that can make up the binary file:
 
-(def key-token-format (binary-protocol (ByteBasedChunker.)
+  (def key-token-format (binary-protocol (ByteBasedChunker.)
     (section :KEY_TOKEN_ID,            (FixedLength. 2))
     (section :INCLUDES_PRIVATE_KEY,    (EnumeratedValue. 1 (IncludesPrivateKey.)))
     (section :PRIVATE_KEY,             (DependentValue. 256 (PrivateKeyPresent.)))
@@ -22,11 +22,11 @@ Made up example that shows the various sections that can make up the binary file
 
 ### Parse your binary file
 
-(def parsed (parse-binary (FileStreamWrapper. test-file) key-token-format))
+  (def parsed (parse-binary (FileStreamWrapper. test-file) key-token-format))
 
 ### Render the parsed binary
 
-(visualize-binary (take 7 (repeat (HexVisualizer.))) parsed)
+  (visualize-binary (take 7 (repeat (HexVisualizer.))) parsed)
 
 ## License
 
