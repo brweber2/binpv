@@ -1,6 +1,6 @@
 # binpv
 
-Library for specifying the format of a binary file.
+Library for specifying the format of a binary file, parsing binary files and printing a somewhat human readable format.
 Very *alpha* at the moment.  Use at your own risk.
 
 ## Usage
@@ -23,7 +23,7 @@ Made up example that shows the various sections that can make up the binary file
 You'll have to extends a few protocols yourself if you intend to use sections that are:
 
 * enumerated values (to provide the possible values)
-* dependent values (to declare when value from an earlier section determines if this section is present in the file)
+* dependent values (to declare which value from an earlier section determines if this section is present in the file)
 * dependent fixed length (the length depends on the value of an earlier section) 
 * variable length (only if you want something more sophisticated that a stop sequence)
 
