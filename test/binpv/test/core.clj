@@ -1,6 +1,6 @@
 (ns binpv.test.core
   (:use [binpv.core])
-  (:import [binpv.core ByteBasedChunker FixedLength EnumeratedValue DependentValue FixedLength DependentFixedLength VariableLength FileStreamWrapper HexVisualizer])
+  (:import [binpv.core ByteBasedChunker FixedLength EnumeratedValue DependentValue FixedLength DependentFixedLength VariableLength FileStreamWrapper HexVisualizer StopAt])
   (:use [clojure.test]))
 
 (def TEMP_BASE "/tmp/foo")
