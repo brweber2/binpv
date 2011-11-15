@@ -1,5 +1,6 @@
 (ns binpv.core
-	(:import [java.io FileInputStream BufferedInputStream]))
+	(:import [java.io FileInputStream BufferedInputStream])
+    (:use binpv.dump))
 
 (defprotocol Visualizer
     (visualize-it [this parsed-section]))
@@ -41,10 +42,11 @@
     []
     Visualizer
     (visualize-it [this parsed-section]
-        (print (:ID parsed-section))
-        (print (prhex (:RESULT parsed-section)))
-        (print " : ")
-        (print (prascii (:RESULT parsed-section)))
+        (println (:ID parsed-section))
+        (dump-buffer (:RESULT parsed-section))
+        ; (print (prhex (:RESULT parsed-section)))
+        ; (print " : ")
+        ; (print (prascii (:RESULT parsed-section)))
         (println)))
         
     
