@@ -88,7 +88,7 @@
         (def parsed (parse-binary (FileStreamWrapper. test-file) key-token-format))
 		(println "parsed is" parsed)
         (is (seq parsed))
-        (visualize-binary [(HexVisualizer.),nil,nil,nil,nil,nil,nil] parsed)))
+        (visualize-binary (take 7 (repeat (HexVisualizer.))) parsed)))
 
 ; repeat, but for invalid binary file
 

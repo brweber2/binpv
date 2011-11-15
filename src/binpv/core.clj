@@ -43,7 +43,9 @@
     Visualizer
     (visualize-it [this parsed-section]
         (println (:ID parsed-section))
-        (dump-buffer (:RESULT parsed-section))
+        (if (seq? parsed-section)
+            (dump-buffer (:RESULT parsed-section))
+            (println parsed-section))
         ; (print (prhex (:RESULT parsed-section)))
         ; (print " : ")
         ; (print (prascii (:RESULT parsed-section)))
