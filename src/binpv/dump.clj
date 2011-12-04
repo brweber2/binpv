@@ -41,15 +41,20 @@
       ch
       \.)))
 
-(defn output [byte-count line]
-  (let [mid-point (dec (quot line-width 2))]
-    (cl-format true "~:@(~8,'0X~):  " byte-count)
-    (dotimes [i line-width]
-      (cl-format true "~:@(~2,'0X~)~:[ ~;-~]" (nth line i) (= i mid-point)))
-    (cl-format true " ")
-    (dotimes [i line-width]
-      (cl-format true "~C~:[~;-~]" (code->char (nth line i)) (= i mid-point)))
-    (cl-format true "~%")))
+(defn line->hex [line]
+    (let [mid-point (dec (quot line-width 2))]
+          (map (fn [b i] [b (if (== i mid-point) \- \space)]) line (range line-width))))
+
+  (defn line->printable [line]
+      (let [mid-point (dec (quot line-width 2))]
+            (map (fn [b i] [(code->char b) (if (== i mid-point) "-" "")]) line (range line-width))))
+
+  (defn output [byte-count line]
+      (cl-format true "~:@(~8,'0X~):  " byte-count)
+      (cl-format true "~:{~:@(~2,'0X~)~C~}" (line->hex line))
+      (cl-format true " ")
+      (cl-format true "~:{~C~A~}" (line->printable line))
+      (cl-format true "~%"))
 
 (defn fill-line [line]
   (let [fill (- line-width (count line))]
