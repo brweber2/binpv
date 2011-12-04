@@ -44,7 +44,8 @@
     (visualize-it [this parsed-section]
         (println (:ID parsed-section))
         (if (seq? (:RESULT parsed-section))
-            (dump-buffer (:RESULT parsed-section)))
+            (dump-buffer (:RESULT parsed-section))
+            (println (:RESULT parsed-section)))
         (println)))
     
 (deftype ByteBasedChunker
