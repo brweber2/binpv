@@ -29,7 +29,7 @@
 
 (ns binpv.dump
   (:use [clojure.pprint :only (cl-format)]))
-   
+
 (def line-width 16)
 
 (defn printable-char? [ch]
@@ -50,6 +50,7 @@
             (map (fn [b i] [(code->char b) (if (== i mid-point) "-" "")]) line (range line-width))))
 
   (defn output [byte-count line]
+      (cl-format true "                      ")
       (cl-format true "~:@(~8,'0X~):  " byte-count)
       (cl-format true "~:{~:@(~2,'0X~)~C~}" (line->hex line))
       (cl-format true " ")
@@ -61,7 +62,7 @@
     (if (zero? fill)
       line
       (concat line (repeat fill 0)))) )
-              
+
 (defn dump-buffer [buffer]
   (loop [buff (drop line-width buffer)
          line (fill-line (take line-width buffer))
