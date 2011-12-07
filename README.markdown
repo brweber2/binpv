@@ -10,7 +10,16 @@ Just write some code.
 
 ### Specify the format of your binary file
 
-Made up example that shows the various sections that can comprise the binary file:
+It will look something like:
+
+    (def em-format (binary-protocol (ByteBasedChunker.)
+                 (section :ERROR_CODE  (FixedLength. 4))
+                 (section :ERROR_CLASS (FixedLength. 4))
+                 (section :FILENAME    (FixedLength. 64))
+                 (section :LINE_NUMBER (FixedLength. 4))
+                 (section :DESCRIPTION (FixedLength. 128))))
+
+Here is a made up example that shows the various sections that can comprise the binary file:
 
     (def key-token-format (binary-protocol (ByteBasedChunker.)
         (section :KEY_TOKEN_ID,            (FixedLength. 2))
