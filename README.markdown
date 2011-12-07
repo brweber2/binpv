@@ -40,7 +40,7 @@ Examples in test/binpv/test/core.clj include:
 Visualizers are completely separated from the declaration of the binary format.  This allows you to have as many visual
 representations as you would like.  A command line visualizer and a GUI visualizer for example.
 
-  (def cli-visualizer [(IntegerVisualizer.)
+    (def cli-visualizer [(IntegerVisualizer.)
                         (IntegerVisualizer.)
                         (HexVisualizer.)
                         (IntegerVisualizer.)
@@ -51,7 +51,7 @@ representations as you would like.  A command line visualizer and a GUI visualiz
 Nested binary protocols use a BinaryProtocolVisualizer which is passed the list of visualizers to use. Replace '...'
 with the actual visualizers of course.
 
-  (def nested-visualizer (BinaryProtocolVisualizer.
+    (def nested-visualizer (BinaryProtocolVisualizer.
                         [...]))
 
 ### Parse your binary file
