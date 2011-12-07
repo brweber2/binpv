@@ -35,13 +35,32 @@ Examples in test/binpv/test/core.clj include:
 * PublicKeyLength
 * AllDone
 
+### Specify how each section will be rendered
+
+Visualizers are completely separated from the declaration of the binary format.  This allows you to have as many visual
+representations as you would like.  A command line visualizer and a GUI visualizer for example.
+
+  (def cli-visualizer [(IntegerVisualizer.)
+                        (IntegerVisualizer.)
+                        (HexVisualizer.)
+                        (IntegerVisualizer.)
+                        (HexVisualizer.)
+                        (HexVisualizer.)
+                        (IntegerVisualizer.)])
+
+Nested binary protocols use a BinaryProtocolVisualizer which is passed the list of visualizers to use. Replace '...'
+with the actual visualizers of course.
+
+  (def nested-visualizer (BinaryProtocolVisualizer.
+                        [...]))
+
 ### Parse your binary file
 
     (def parsed (parse-binary (FileStreamWrapper. test-file) key-token-format))
 
 ### Render the parsed binary
 
-    (visualize-binary (take 7 (repeat (HexVisualizer.))) parsed)
+    (visualize-binary cli-visualizer parsed)
 
 ### You can also nest binary protocols.  See test/binpv/test/am.clj for an example.
 
