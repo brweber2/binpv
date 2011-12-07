@@ -43,6 +43,10 @@ Examples in test/binpv/test/core.clj include:
 
     (visualize-binary (take 7 (repeat (HexVisualizer.))) parsed)
 
+### You can also nest binary protocols.  See test/binpv/test/am.clj for an example.
+
+### See [http://blog.brweber2.com/blog/2011/12/03/a-binary-file-viewer/] for some additional documentation.
+
 ## License
 
 Copyright (C) 2011 brweber2 
